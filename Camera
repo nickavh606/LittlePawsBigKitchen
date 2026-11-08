@@ -1,0 +1,67 @@
+using UnityEngine;
+
+public class CameraOrbot : MonoBehaviour
+{
+  [Header("Objetivo")]
+    public Transform target; 
+    [Header("Distancia y Zoom")]
+    public float distance = 5.0f;
+    public float minDistance = 2.0f;
+    public float maxDistance = 20.0f;
+    public float zoomSpeed = 3.0f;
+
+    [Header("Rotación")]
+    public float xSpeed = 120.0f;
+    public float ySpeed = 120.0f;
+    public float yMinLimit = -20f;
+    public float yMaxLimit = 80f;
+
+    [Header("Suavizado")]
+    public float smoothTime = 0.12f;
+
+    private float x = 0.0f;
+    private float y = 0.0f;
+    private Vector3 currentVelocity;
+    private Vector3 targetPosition;
+
+    void Start()
+    {
+       
+        Vector3 angles = transform.eulerAngles;
+        x = angles.y;
+        y = angles.x;
+
+       
+        Cursor.lockState = CursorLockMode.None;
+    }
+
+    void LateUpdate()
+    {
+        if (!target) return;
+
+    
+        if (Input.GetMouseButton(1))
+        {
+            x += Input.GetAxis("Mouse X") * xSpeed * Time.deltaTime;
+            y -= Input.GetAxis("Mouse Y") * ySpeed * Time.deltaTime;
+
+           
+            y = Mathf.Clamp(y, yMinLimit, yMaxLimit);
+        }
+
+      
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        distance = Mathf.Clamp(distance - scroll * zoomSpeed, minDistance, maxDistance);
+
+     
+        Quaternion rotation = Quaternion.Euler(y, x, 0);
+        Vector3 negDistance = new Vector3(0.0f, 0.0f, -distance);
+        Vector3 desiredPosition = rotation * negDistance + target.position;
+
+      
+        transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref currentVelocity, smoothTime);
+        
+      
+        transform.LookAt(target);
+    }
+}
